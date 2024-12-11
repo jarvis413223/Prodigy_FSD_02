@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Employee Management</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      background-color: #f9f9f9;
+    }
+
+    .container {
+      max-width: 800px;
+      margin: 20px auto;
+      padding: 20px;
+      background: white;
+      border-radius: 10px;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 20px 0;
+    }
+
+    table, th, td {
+      border: 1px solid #ddd;
+    }
+
+    th, td {
+      padding: 8px;
+      text-align: left;
+    }
+
+    form {
+      margin-bottom: 20px;
+    }
+
+    input, button {
+      padding: 10px;
+      margin: 5px 0;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+    }
+
+    button {
+      background-color: #007bff;
+      color: white;
+      border: none;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background-color: #0056b3;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Employee Management</h1>
+
+    <!-- Form for Adding/Updating Employees -->
+    <form id="employee-form">
+      <input type="hidden" id="employee-id">
+      <input type="text" id="employee-name" placeholder="Name" required>
+      <input type="text" id="employee-role" placeholder="Role" required>
+      <button type="submit">Save</button>
+    </form>
+
+    <!-- Table for Displaying Employees -->
+    <table>
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Name</th>
+          <th>Role</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody id="employee-table"></tbody>
+    </table>
+  </div>
+
+  <script>
+    const form = document.getElementById('employee-form');
+    const tableBody = document.getElementById('employee-table');
+
+    const apiUrl = 'http://localhost:3000/employees';
+
+    async function fetchEmployees() {
+      const response = await fetch(apiUrl);
+      const employees = await response.json();
+      tableBody.innerHTML = '';
+      employees.forEach((employee) => {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+          <td>${employee.id}</td>
+          <td>${employee.name}</td>
+          <td>${employee.role}</td>
+          <td>
+            <button onclick="editEmployee(${employee.id}, '${employee.name}', '${employee.role}')">Edit</button>
+            <button onclick="deleteEmployee(${employee.id})">Delete</button>
+          </td>
+        `;
+        tableBody.appendChild(row);
+      });
+    }
+
+    async function saveEmployee(e) {
+      e.preventDefault();
+      const id = document.getElementById('employee-id').value;
+      const name = document.getElementById('employee-name').value;
+      const role = document.getElementById('employee-role').value;
+
+      const method = id ? 'PUT' : 'POST';
+      const url = id ? `${apiUrl}/${id}` : apiUrl;
+
+      await fetch(url, {
+        method,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, role })
+      });
+
+      form.reset();
+      fetchEmployees();
+    }
+
+    async function deleteEmployee(id) {
+      await fetch(`${apiUrl}/${id}`, { method: 'DELETE' });
+      fetchEmployees();
+    }
+
+    function editEmployee(id, name, role) {
+      document.getElementById('employee-id').value = id;
+      document.getElementById('employee-name').value = name;
+      document.getElementById('employee-role').value = role;
+    }
+
+    form.addEventListener('submit', saveEmployee);
+    fetchEmployees();
+  </script>
+</body>
+</html>
